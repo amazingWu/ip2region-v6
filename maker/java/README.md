@@ -2,7 +2,7 @@
 
 ### 1, How to build ?
 ```
-ant all
+maven package
 ```
 
 

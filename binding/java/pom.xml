@@ -103,7 +103,7 @@
             <configuration>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>org.lionsoul.ip2region.test.TestSearcher</mainClass>
+                  <mainClass>org.lionsoul.ip2region.TestIpv4Searcher</mainClass>
                 </transformer>
               </transformers>
             </configuration>

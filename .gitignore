@@ -44,3 +44,8 @@ target
 # Nodejs
 /binding/nodejs/tests/unitTests/__snapshots__
 /binding/nodejs/coverage
+
+
+# idea
+*.iml
+.idea/

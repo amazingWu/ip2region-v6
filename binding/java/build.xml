@@ -32,7 +32,7 @@
 			<include name="**/*"/>
 			<!--manifest information setting-->
 			<manifest>
-				<attribute name="Main-Class" value="org.lionsoul.ip2region.test.TestSearcher"/>
+				<attribute name="Main-Class" value="org.lionsoul.ip2region.TestIpv4Searcher"/>
 				<attribute name="Class-Path" value=""/>
 			</manifest>
 		</jar>

@@ -1,5 +1,13 @@
 package org.lionsoul.ip2region;
 
+import org.apache.commons.cli.*;
+import org.lionsoul.ip2region.constant.DbConstant;
+import org.lionsoul.ip2region.entity.DataBlock;
+import org.lionsoul.ip2region.entity.HeaderBlock;
+import org.lionsoul.ip2region.entity.IndexBlock;
+import org.lionsoul.ip2region.exception.DbMakerConfigException;
+import org.lionsoul.ip2region.exception.DbMakerDataException;
+import org.lionsoul.ip2region.utils.ByteUtil;
 import sun.net.util.IPAddressUtil;
 
 import java.io.*;
@@ -15,10 +23,10 @@ import java.util.LinkedList;
  * db struct:
  * 1. header part
  * 1): super part:
- * +--------+---------+---------+---------+
- * 1 bytes  |  4bytes | 4 bytes | 4 bytes
- * +--------+---------+---------+---------+
- * db type, db size, start index ptr, end index ptr
+ * +--------+---------+---------+---------+---------+
+ * 1 bytes  |  4bytes | 4 bytes | 4 bytes | 4 bytes
+ * +--------+---------+---------+---------+---------+
+ * db type, db size, header block size, start index ptr, end index ptr
  * <p>
  * 2): b-tree index part
  * +------------------------+-----------+-----------+-----------+
@@ -38,14 +46,9 @@ import java.util.LinkedList;
  * +------------+-----------+---------------+
  * start ip 	  end ip	  3 byte data ptr & 1 byte data length
  *
- * @author chenxin<chenxin619315gmail.com>
+ * @author chenxin619315@gmail.com
  */
 public class DbMaker {
-
-    public static final int FILE_SIZE_PTR = 1;
-    public static final int FIRST_INDEX_PTR = 5;
-    public static final int END_INDEX_PTR = 9;
-    public static final int SUPER_PART_LENGTH = 13;
     /**
      * db config
      */
@@ -76,16 +79,14 @@ public class DbMaker {
      * construct method
      *
      * @param config
-     * @param ipSrcFile        tb source ip file
-     * @param globalRegionFile global_region.csv file offer by lion
+     * @param ipSrcFile tb source ip file
      * @throws DbMakerConfigException
      * @throws IOException
      */
     public DbMaker(
             DbConfig config,
             DbType dbType,
-            String ipSrcFile,
-            String globalRegionFile) throws DbMakerConfigException, IOException {
+            String ipSrcFile) throws IOException {
         this.dbConfig = config;
         this.dbType = dbType;
         this.ipSrcFile = new File(ipSrcFile);
@@ -104,7 +105,7 @@ public class DbMaker {
     private void initDbFile(RandomAccessFile raf) throws IOException {
         //1. zero fill the header part
         raf.seek(0L);
-        raf.write(new byte[SUPER_PART_LENGTH]);        //super block
+        raf.write(new byte[DbConstant.SUPER_PART_LENGTH]);        //super block
         raf.write(new byte[dbConfig.getTotalHeaderSize()]);        //header block
 
         headerPool = new LinkedList<HeaderBlock>();
@@ -213,11 +214,12 @@ public class DbMaker {
         //write the super blocks
         System.out.println("+-Try to write the super blocks ... ");
         raf.seek(0L);    //reset the file pointer
-        byte[] superBuffer = new byte[SUPER_PART_LENGTH];
+        byte[] superBuffer = new byte[DbConstant.SUPER_PART_LENGTH];
         // set db type
         superBuffer[0] = dbType == DbType.IPV4 ? (byte) 0 : (byte) 1;
-        Util.writeIntLong(superBuffer, FIRST_INDEX_PTR, indexStartPtr);
-        Util.writeIntLong(superBuffer, END_INDEX_PTR, indexEndPtr - blockLength);
+        ByteUtil.writeIntLong(superBuffer, DbConstant.FIRST_INDEX_PTR, indexStartPtr);
+        ByteUtil.writeIntLong(superBuffer, DbConstant.HEADER_BLOCK_PTR, dbConfig.getTotalHeaderSize());
+        ByteUtil.writeIntLong(superBuffer, DbConstant.END_INDEX_PTR, indexEndPtr - blockLength);
         raf.write(superBuffer);
         System.out.println("|--[Ok]");
 
@@ -240,8 +242,8 @@ public class DbMaker {
         System.out.println("|--[Ok]");
         // write file length
         byte[] fileSize = new byte[4];
-        Util.writeIntLong(fileSize, 0, raf.length());
-        raf.seek(FILE_SIZE_PTR);
+        ByteUtil.writeIntLong(fileSize, 0, raf.length());
+        raf.seek(DbConstant.FILE_SIZE_PTR);
         raf.write(fileSize);
         reader.close();
         raf.close();
@@ -309,5 +311,58 @@ public class DbMaker {
     public DbMaker setIpSrcFile(File ipSrcFile) {
         this.ipSrcFile = ipSrcFile;
         return this;
+    }
+
+    /**
+     * make this directly a runnable application
+     * interface to make the database file
+     */
+    public static void main(String args[]) {
+        String dstDir = "./data/";
+        Options options = new Options();
+        // help
+        Option option = new Option("h", "help", false, "help");
+        options.addOption(option);
+
+        option = new Option("s", "source", true, "source text file path");
+        options.addOption(option);
+
+        option = new Option("f", "fileName", true, "result file name");
+        options.addOption(option);
+
+        option = new Option("t", "type", true, "ipv4 | ipv6");
+        options.addOption(option);
+
+        try {
+            CommandLineParser parser = new GnuParser();
+            CommandLine commandLine = parser.parse(options, args);
+            if (commandLine.getOptions().length == 0 || commandLine.hasOption('h')) {
+                new HelpFormatter().printHelp("ip2region-maker", options, true);
+                return;
+            }
+            if (!commandLine.hasOption("s")) {
+                throw new Exception("source must be set");
+            }
+            if (!commandLine.hasOption("f")) {
+                throw new Exception("fileName must be set");
+            }
+            if (!commandLine.hasOption("t")) {
+                throw new Exception("type must be set");
+            }
+            DbType dbType;
+            if ("ipv4".equals(commandLine.getOptionValue("t"))) {
+                dbType = DbType.IPV4;
+            } else if ("ipv4".equals(commandLine.getOptionValue("t"))) {
+                dbType = DbType.IPV6;
+            } else {
+                throw new Exception("type is invalid");
+            }
+
+            DbConfig config = new DbConfig();
+            DbMaker dbMaker = new DbMaker(config, dbType, commandLine.getOptionValue("s"));
+            dbMaker.make(dstDir + commandLine.getOptionValue("f"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

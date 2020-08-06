@@ -1,5 +1,8 @@
 package org.lionsoul.ip2region;
 
+import org.lionsoul.ip2region.entity.IndexBlock;
+import org.lionsoul.ip2region.exception.DbMakerConfigException;
+
 /**
  * database configuration class
  *
@@ -8,7 +11,7 @@ package org.lionsoul.ip2region;
 public class DbConfig {
     /**
      * total header data block size.
-     * 太小的话会导致该区域不够建立二级索引，从而会导致覆盖数据区域，因此需要根据 index num来确定该值。
+     * 太小的话会导致该区域不够建立二级索引，从而会导致覆盖数据区域，因此需要根据 indexNum来确定该值，indexNum为文件行数。
      * 该值需要 > 20 * indexPartitionNum.
      * 其中indexPartitionNum =  indexNum / 2048
      */

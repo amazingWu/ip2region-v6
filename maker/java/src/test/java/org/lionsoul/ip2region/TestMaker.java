@@ -1,5 +1,7 @@
 package org.lionsoul.ip2region;
 
+import org.lionsoul.ip2region.exception.DbMakerConfigException;
+
 import java.io.IOException;
 
 /**
@@ -14,8 +16,7 @@ public class TestMaker {
             DbMaker dbMaker = new DbMaker(
                     config,
                     DbType.IPV6,
-                    "data/ipv6.merge.txt",
-                    "data/global_region.csv"
+                    "data/ipv6.merge.txt"
             );
 
             dbMaker.make("data/ipv6.db");
@@ -32,8 +33,7 @@ public class TestMaker {
             DbMaker dbMaker = new DbMaker(
                     config,
                     DbType.IPV4,
-                    "data/ip.merge.txt",
-                    "data/global_region.csv"
+                    "data/ipv4.merge.txt"
             );
 
             dbMaker.make("data/ipv4.db");

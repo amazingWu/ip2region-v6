@@ -318,7 +318,6 @@ public class DbMaker {
      * interface to make the database file
      */
     public static void main(String args[]) {
-        String dstDir = "./data/";
         Options options = new Options();
         // help
         Option option = new Option("h", "help", false, "help");
@@ -331,6 +330,9 @@ public class DbMaker {
         options.addOption(option);
 
         option = new Option("t", "type", true, "ipv4 | ipv6");
+        options.addOption(option);
+
+        option = new Option("h", "totalHeaderSize", true, "total header size, default is (20 * 2048)");
         options.addOption(option);
 
         try {
@@ -352,15 +354,18 @@ public class DbMaker {
             DbType dbType;
             if ("ipv4".equals(commandLine.getOptionValue("t"))) {
                 dbType = DbType.IPV4;
-            } else if ("ipv4".equals(commandLine.getOptionValue("t"))) {
+            } else if ("ipv6".equals(commandLine.getOptionValue("t"))) {
                 dbType = DbType.IPV6;
             } else {
                 throw new Exception("type is invalid");
             }
 
             DbConfig config = new DbConfig();
+            if (options.hasOption("h")) {
+                config.setTotalHeaderSize(Integer.valueOf(options.getOption("h").getValue()));
+            }
             DbMaker dbMaker = new DbMaker(config, dbType, commandLine.getOptionValue("s"));
-            dbMaker.make(dstDir + commandLine.getOptionValue("f"));
+            dbMaker.make(commandLine.getOptionValue("f"));
         } catch (Exception e) {
             e.printStackTrace();
         }

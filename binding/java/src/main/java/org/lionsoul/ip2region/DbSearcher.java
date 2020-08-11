@@ -9,10 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.net.util.IPAddressUtil;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 
 
 /**
@@ -99,6 +96,29 @@ public class DbSearcher {
         this.dbBinStr = bytes;
         this.dbBinStr = bytes;
         initMemoryOrBinaryModeParam(bytes, bytes.length);
+    }
+
+    /**
+     * you can only use memory query when using this constructor
+     *
+     * @param inputStream
+     * @throws IOException
+     */
+    public DbSearcher(InputStream inputStream) throws IOException {
+        this(readAllAsStream(inputStream));
+    }
+
+    private static byte[] readAllAsStream(InputStream in) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+
+        int n;
+        while ((n = in.read(buffer)) != -1) {
+            out.write(buffer, 0, n);
+        }
+
+        in.close();
+        return out.toByteArray();
     }
 
     private void initMemoryOrBinaryModeParam(byte[] bytes, long fileSize) {

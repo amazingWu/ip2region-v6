@@ -135,7 +135,9 @@ public class DbMaker {
         //analysis main loop
         System.out.println("+-Try to write the data blocks ... ");
         String line = null;
+        int num = 0;
         while ((line = reader.readLine()) != null) {
+            num++;
             line = line.trim();
             if (line.length() == 0) {
                 continue;
@@ -161,7 +163,7 @@ public class DbMaker {
             sIdx = eIdx + 1;
             String region = line.substring(sIdx);
 
-            System.out.println("+-Try to process item " + line);
+            System.out.println("+-Try to process " + num + " item " + line);
             addDataBlock(raf, startIp, endIp, region);
             System.out.println("|--[Ok]");
         }
@@ -332,7 +334,7 @@ public class DbMaker {
         option = new Option("t", "type", true, "ipv4 | ipv6");
         options.addOption(option);
 
-        option = new Option("h", "totalHeaderSize", true, "total header size, default is (20 * 2048)");
+        option = new Option("l", "totalHeaderSize", true, "total header size, default is (20 * 2048)");
         options.addOption(option);
 
         try {
@@ -359,9 +361,8 @@ public class DbMaker {
             } else {
                 throw new Exception("type is invalid");
             }
-
             DbConfig config = new DbConfig();
-            if (options.hasOption("h")) {
+            if (commandLine.hasOption("l")) {
                 config.setTotalHeaderSize(Integer.valueOf(options.getOption("h").getValue()));
             }
             DbMaker dbMaker = new DbMaker(config, dbType, commandLine.getOptionValue("s"));

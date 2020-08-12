@@ -2,11 +2,11 @@
 
 ### 1, How to build ?
 ```
-maven package
+maven package -Dmaven.test.skip=true
 ```
 
 
 ### 2, How to make ?
 ```
-java -jar dbMaker-{version}.jar -src path of ip.merge.txt -region path of global_region.csv -dst ip2region.db target path
+java -jar ip2region-maker-{version}-with-dependencies.jar -s {must: path of ip.merge.txt} -t {must: file name of db} -t {must: ipv6 | ipv4} -l {option: total header block size. default value is 20 * 2048}.
 ```

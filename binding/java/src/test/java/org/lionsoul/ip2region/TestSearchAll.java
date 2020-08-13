@@ -29,7 +29,7 @@ public class TestSearchAll {
     public void testIpv6Db() {
         try {
             DbSearcher _searcher = new DbSearcher("../../data/ipv6.db", QueryType.MEMORY);
-            BufferedReader bfr = new BufferedReader(new FileReader("../../data/ipv6.merge.txt"));
+            BufferedReader bfr = new BufferedReader(new FileReader("../../data/ipv6_merge.txt"));
             BufferedWriter bwr = new BufferedWriter(new FileWriter("../../data/error_ipv6_log.txt", true));
             execute(_searcher, bwr, bfr);
         } catch (Exception e) {

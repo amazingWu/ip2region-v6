@@ -1,3 +1,0 @@
-0:0:0:0:0:0:0:0|2001:4:111:ffff:ffff:ffff:ffff:ffff|0|0|0|内网IP|内网IP
-2001:4:112:0:0:0:0:0|2001:4:112:ffff:ffff:ffff:ffff:ffff|澳大利亚|0|0|0|0
-2001:4:113:0:0:0:0:0|2001:1ff:ffff:ffff:ffff:ffff:ffff:ffff|中国|0|福建省|福州市|电信

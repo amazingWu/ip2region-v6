@@ -95,6 +95,7 @@ public class DbSearcher {
     public DbSearcher(byte[] bytes) {
         this.dbBinStr = bytes;
         this.dbBinStr = bytes;
+        this.queryType = QueryType.MEMORY;
         initMemoryOrBinaryModeParam(bytes, bytes.length);
     }
 

@@ -64,6 +64,8 @@ public class DbMaker {
      */
     private File ipSrcFile;
 
+    private int headerTotalSize;
+
     /**
      * buffer
      */
@@ -94,6 +96,17 @@ public class DbMaker {
         if (this.ipSrcFile.exists() == false) {
             throw new IOException("Error: Invalid file path " + ipSrcFile);
         }
+        LineNumberReader lineNumberReader = null;
+        try {
+            lineNumberReader = new LineNumberReader(new FileReader(this.ipSrcFile));
+            lineNumberReader.skip(this.ipSrcFile.length());
+            int lines = lineNumberReader.getLineNumber() + 1;
+            headerTotalSize = 20 * (lines / (config.getIndexPartitionSize() / IndexBlock.getIndexBlockLength()) + 3);
+        } finally {
+            if (lineNumberReader != null) {
+                lineNumberReader.close();
+            }
+        }
     }
 
     /**
@@ -105,8 +118,10 @@ public class DbMaker {
     private void initDbFile(RandomAccessFile raf) throws IOException {
         //1. zero fill the header part
         raf.seek(0L);
-        raf.write(new byte[DbConstant.SUPER_PART_LENGTH]);        //super block
-        raf.write(new byte[dbConfig.getTotalHeaderSize()]);        //header block
+        //super block
+        raf.write(new byte[DbConstant.SUPER_PART_LENGTH]);
+        //header block
+        raf.write(new byte[this.headerTotalSize]);
 
         headerPool = new LinkedList<HeaderBlock>();
         indexPool = new LinkedList<IndexBlock>();
@@ -125,7 +140,7 @@ public class DbMaker {
         }
 
         //alloc the header size
-        BufferedReader reader = new BufferedReader(new FileReader(this.ipSrcFile));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(this.ipSrcFile), "UTF-8"));
         RandomAccessFile raf = new RandomAccessFile(dbFile, "rw");
 
         //init the db file
@@ -171,7 +186,7 @@ public class DbMaker {
         System.out.println("|--Data file pointer: " + raf.getFilePointer() + "\n");
 
         //write the index bytes
-        System.out.println("+-Try to write index blocks ... ");
+        System.out.println("+-Try to write index blocks. index block size: " + indexPool.size() + " ... ");
 
         //record the start block
         IndexBlock indexBlock = null;
@@ -183,7 +198,8 @@ public class DbMaker {
 
         int blockLength = IndexBlock.getIndexBlockLength();
         int counter = 0;
-        int shotCounter = (dbConfig.getIndexPartitionSize() / blockLength) - 1; // num of index each index partition having
+        // num of index each index partition having
+        int shotCounter = (dbConfig.getIndexPartitionSize() / blockLength);
         Iterator<IndexBlock> indexIt = indexPool.iterator();
         while (indexIt.hasNext()) {
             indexBlock = indexIt.next();
@@ -220,13 +236,13 @@ public class DbMaker {
         // set db type
         superBuffer[0] = dbType == DbType.IPV4 ? (byte) 0 : (byte) 1;
         ByteUtil.writeIntLong(superBuffer, DbConstant.FIRST_INDEX_PTR, indexStartPtr);
-        ByteUtil.writeIntLong(superBuffer, DbConstant.HEADER_BLOCK_PTR, dbConfig.getTotalHeaderSize());
+        ByteUtil.writeIntLong(superBuffer, DbConstant.HEADER_BLOCK_PTR, headerTotalSize);
         ByteUtil.writeIntLong(superBuffer, DbConstant.END_INDEX_PTR, indexEndPtr - blockLength);
         raf.write(superBuffer);
         System.out.println("|--[Ok]");
 
         //write the header blocks
-        System.out.println("+-Try to write the header blocks ... ");
+        System.out.println("+-Try to write the header blocks. header block pool size " + headerPool.size() + " ... ");
         Iterator<HeaderBlock> headerIt = headerPool.iterator();
         while (headerIt.hasNext()) {
             HeaderBlock headerBlock = headerIt.next();
@@ -334,9 +350,6 @@ public class DbMaker {
         option = new Option("t", "type", true, "ipv4 | ipv6");
         options.addOption(option);
 
-        option = new Option("l", "totalHeaderSize", true, "total header size, default is (20 * 2048)");
-        options.addOption(option);
-
         try {
             CommandLineParser parser = new GnuParser();
             CommandLine commandLine = parser.parse(options, args);
@@ -362,9 +375,6 @@ public class DbMaker {
                 throw new Exception("type is invalid");
             }
             DbConfig config = new DbConfig();
-            if (commandLine.hasOption("l")) {
-                config.setTotalHeaderSize(Integer.valueOf(options.getOption("h").getValue()));
-            }
             DbMaker dbMaker = new DbMaker(config, dbType, commandLine.getOptionValue("s"));
             dbMaker.make(commandLine.getOptionValue("f"));
         } catch (Exception e) {

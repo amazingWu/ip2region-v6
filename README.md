@@ -90,18 +90,18 @@ p2region>> 101.105.35.57
 输入IP地址开始测试，第一次会稍微有点慢，在运行命令后面接入binary,memory来尝试其他算法，建议使用b-tree算法，速度和并发需求的可以使用memory算法，具体集成请参考不同binding下的测试源码。
 
 
-
-
 # ip2region安装
+
+此魔改库目前只完成了java的适配，其他语言暂未完成适配。
 
 具体请参考每个binding下的README文档和测试demo，以下是一些可用的快捷安装方式：
 
 ### maven仓库地址
 ```xml
 <dependency>
-    <groupId>org.lionsoul</groupId>
-    <artifactId>ip2region</artifactId>
-    <version>1.7.2</version>
+    <groupId>org.ip2region</groupId>
+    <artifactId>ip2region-search</artifactId>
+    <version>1.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -143,11 +143,7 @@ composer require zoujingli/ip2region
 2. cd到${ip2region_root}/maker/java，然后运行如下命令：
 
 ```shell
-java -jar dbMaker-{version}.jar -src 文本数据文件 -region 地域csv文件 [-dst 生成的ip2region.db文件的目录]
-
-# 文本数据文件：db文件的原始文本数据文件路径，自带的ip2region.db文件就是/data/ip.merge.txt生成而来的，你可以换成自己的或者更改/data/ip.merge.txt重新生成
-# 地域csv文件：该文件目的是方便配置ip2region进行数据关系的存储，得到的数据包含一个city_id，这个直接使用/data/origin/global_region.csv文件即可
-# ip2region.db文件的目录：是可选参数，没有指定的话会在当前目录生成一份./data/ip2region.db文件
+java -jar ip2region-maker-{version}-with-dependencies.jar -s 文本数据文件 -f 生成的ip2region.db文件名称或完整目录+名称 -t ipv6|ipv4
 ```
 
 3. 获取生成的ip2region.db文件覆盖原来的ip2region.db文件即可
@@ -155,8 +151,7 @@ java -jar dbMaker-{version}.jar -src 文本数据文件 -region 地域csv文件 
 
 ```shell
 cd ${ip2region_root}/java/
-java -jar dbMaker-1.2.2.jar -src ./data/ip.merge.txt -region ./data/global_region.csv
-
+java -jar ../../ip2region-maker-1.0-SNAPSHOT-with-dependencies.jar -s ipv6_merge.txt -f ipv6_netease.db -t ipv6
 # 会看到一大片的输出
 ```
 
@@ -170,4 +165,5 @@ ip2region重点在于<b>研究IP数据的存储设计和各种语言的查询实
 
 ### 技术交流
 1. 数据库文件的结构和原理请阅读 @冬芽 的blog：[“ip2region数据库文件的结构和原理”](https://github.com/dongyado/dongyado.github.io/blob/master/_posts/2016-08-18-structure-of-ip2region-database-file.md)
-2. ip2region交流分享，微信：lionsoul2014(请备注ip2region)，QQ：1187582057(很少关注)
+2. 原作者，ip2region交流分享，微信：lionsoul2014(请备注ip2region)，QQ：1187582057(很少关注)
+3. 更改人, amazingjadewu@163.com
